@@ -6,7 +6,8 @@
 ## Introduction 
 简易的C++异步日志，采用了日志缓冲区的方式提高效率，写入压力大时，缓冲区个数可自动扩展  
 通常情况工作时为双缓冲区  
-性能有待提高   
+Init初始化时创建一个后台flush线程，用于写入log文件  
+性能有待提高，已进行了单线程测试，多线程尚未进行   
 
 ## Envoirment  
 * CPU: Intel(R) Core(TM) i3-3220 CPU @ 3.30GHz (2 logical cores per physical)

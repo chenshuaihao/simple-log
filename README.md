@@ -16,10 +16,11 @@ Init初始化时创建一个后台flush线程，用于写入log文件
 因此，同步写入和异步写入的fwrite之后增加flush操作刷盘，就可以实现异步更快于同步了。  
 
 ## Envoirment  
-* CPU: Intel(R) Core(TM) i3-3220 CPU @ 3.30GHz (2 logical cores per physical)
-* MEM: 32GB ddr3
+* CPU: AMD Ryzen Threadripper 2990WX 32-Core Processor
+* MEM: 128GB ddr4
+* STORE: 500GB NVME
 * OS: Ubuntu 16.04
-* kernel: 4.15.0-45-generic (# uname -a)
+* kernel: 4.15.0-72-generic (# uname -a)
 * Complier: gcc version 5.4.0 20160609
 
 ## Build and Run

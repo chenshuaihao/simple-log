@@ -147,7 +147,7 @@ void Logger::Append(int level, const char *file, int line, const char *func, con
             //从FREE队列取buf
             std::lock_guard<std::mutex> lock3(freemtx);
             if(!freebufqueue.empty()) {  
-                std::cout << "get LogBuffer from freebufqueue" << buftotalnum << std::endl;
+                //std::cout << "get LogBuffer from freebufqueue" << buftotalnum << std::endl;
                 currentlogbuffer = freebufqueue.front();    
                 freebufqueue.pop();            
             }

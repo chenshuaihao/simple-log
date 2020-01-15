@@ -10,6 +10,7 @@
 #ifndef _LOGGER_H_
 #define _LOGGER_H_
 
+#include <sys/time.h>
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
@@ -21,7 +22,7 @@
 #include <mutex>
 #include <condition_variable>
 
-#define BUFSIZE 10*1024*1024 //10MB
+#define BUFSIZE 70*1024*1024 //10MB
 #define LOGLINESIZE 4096 //4KB
 #define MEM_LIMIT 100*1024*1024 //100MB
 
@@ -74,9 +75,9 @@ private:
     //log缓冲区
     char *logbuffer;
     //log缓冲区总大小
-    int bufsize;
+    uint32_t bufsize;
     //log缓冲区used长度
-    int usedlen;
+    uint32_t usedlen;
     //缓冲区状态
     int state;
 };

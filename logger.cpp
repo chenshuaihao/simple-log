@@ -42,6 +42,7 @@ void LogBuffer::FlushToFile(FILE *fp) {
         std::cerr << "fwrite fail!" << std::endl;
     }
     usedlen = 0;
+    fflush(fp);
 }
 
 //Logger
@@ -74,7 +75,7 @@ Logger::~Logger()
     if(fp != nullptr) {
         fclose(fp);
     }
-    for(int i = 0; i < freebufqueue.size(); ++i) {
+    for(uint32_t i = 0; i < freebufqueue.size(); ++i) {
         LogBuffer* p = freebufqueue.front();
         freebufqueue.pop();
         delete p;
@@ -115,16 +116,19 @@ void Logger::Append(int level, const char *file, int line, const char *func, con
     //单行日志
     char logline[LOGLINESIZE] = {0};
     
-    time_t t = time(nullptr);
+    struct timeval tv;
+    gettimeofday (&tv, NULL);
+    time_t t = tv.tv_sec;
     struct tm *ptm = localtime(&t);
 
-    int n = snprintf(logline, LOGLINESIZE, "[%s][%04d-%02d-%02d %02d:%02d:%02d]%s:%d(%s): ", LevelString[level], ptm->tm_year+1900, 
-        ptm->tm_mon+1, ptm->tm_mday, ptm->tm_hour, ptm->tm_min, ptm->tm_sec, file, line, func);
-    //char *p = logbuffer + n;
+    uint32_t n = snprintf(logline, LOGLINESIZE, "[%s][%04d-%02d-%02d %02d:%02d:%02d.%03ld]%s:%d(%s): ", LevelString[level], ptm->tm_year+1900, \
+        ptm->tm_mon+1, ptm->tm_mday, ptm->tm_hour, ptm->tm_min, ptm->tm_sec, tv.tv_usec/1000, file, line, func);
+
 
     va_list args;
     va_start(args, fmt);
-    int m = vsnprintf(logline + n, LOGLINESIZE - n, fmt, args);
+    int m = 0;
+    m = vsnprintf(logline + n, LOGLINESIZE - n, fmt, args);
     va_end(args);
 
     //append to buf

@@ -26,15 +26,17 @@ void log(int i, FILE *fp) {
     time_t t = time(nullptr);
     struct tm *ptm = localtime(&t);
 
-    int n = snprintf(logline, LOGLINESIZE, "[%s][%04d-%02d-%02d %02d:%02d:%02d]%s:%d(%s): log test %d\n", "ERROR", ptm->tm_year+1900, 
+    uint32_t n = snprintf(logline, LOGLINESIZE, "[%s][%04d-%02d-%02d %02d:%02d:%02d]%s:%d(%s): log test %d\n", "ERROR", ptm->tm_year+1900, 
         ptm->tm_mon+1, ptm->tm_mday, ptm->tm_hour, ptm->tm_min, ptm->tm_sec, __FILE__, __LINE__, __FUNCTION__, i);
 
     uint32_t wt_len = fwrite(logline, 1, n, fp);
     if(wt_len != n) {
         std::cerr << "fwrite fail!" << std::endl;
     }   
+    fflush(fp);
 }
 
+//同步写入测试
 void synctest() {
     printf("1 million times logtest synctest...\n");
     char logfilepath[256] = "./log_synctest";
@@ -43,7 +45,7 @@ void synctest() {
         printf("logfile open fail!\n");
     }
     uint64_t start_ts = get_current_millis();
-    for (int i = 0;i < 10000000; ++i)
+    for (int i = 0;i < 1000000; ++i)
     {
         //LOG(LoggerLevel::ERROR, "log test %d\n", i);
         log(i, fp);
@@ -53,17 +55,24 @@ void synctest() {
     printf("1 million times logtest, time use %lums\n", end_ts - start_ts);
 }
 
-int main(int argc, char** argv)
-{
-    //synctest
-    synctest();
-
+//单线程异步写入测试
+void single_thread_test() {
     LOG_INIT(".", LoggerLevel::INFO);
     uint64_t start_ts = get_current_millis();
-    for (int i = 0;i < 10000000; ++i)
+    for (int i = 0;i < 1000000; ++i)
     {
         LOG(LoggerLevel::ERROR, "log test %d\n", i);
     }
     uint64_t end_ts = get_current_millis();
     printf("1 million times logtest, time use %lums\n", end_ts - start_ts);
+}
+
+int main(int argc, char** argv)
+{
+    //synctest
+    synctest();
+
+    //single thread test
+    single_thread_test();
+
 }

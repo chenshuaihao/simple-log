@@ -117,9 +117,15 @@ void Logger::Append(int level, const char *file, int line, const char *func, con
     char logline[LOGLINESIZE] = {0};
     
     struct timeval tv;
-    gettimeofday (&tv, NULL);
+    gettimeofday(&tv, NULL);
     time_t t = tv.tv_sec;
-    struct tm *ptm = localtime(&t);
+    static time_t lastsec = 0;
+    static struct tm *ptm = nullptr;
+    //性能优化，秒数不变则不调用localtime
+    if(lastsec != t) {
+        ptm = localtime(&t);  
+        lastsec = t;      
+    }
 
     uint32_t n = snprintf(logline, LOGLINESIZE, "[%s][%04d-%02d-%02d %02d:%02d:%02d.%03ld]%s:%d(%s): ", LevelString[level], ptm->tm_year+1900, \
         ptm->tm_mon+1, ptm->tm_mday, ptm->tm_hour, ptm->tm_min, ptm->tm_sec, tv.tv_usec/1000, file, line, func);

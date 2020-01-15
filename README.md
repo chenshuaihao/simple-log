@@ -9,6 +9,7 @@
 Init初始化时创建一个后台flush线程，用于写入log文件  
 性能有待提高，已进行了单线程测试，多线程尚未进行  
 增加同步写入测试  
+优化性能，减少localtime()调用次数，当秒数不变时只需调用gettimeofday()更新毫秒就可以了
 
 ## Analysis
 一开始时，经测试，发现同步竟然比异步写入要快！非常奇怪，经研究后发现是因为fwrite函数已经起到了缓冲作用，先是写到缓冲区，所以两者都有缓冲，性能差距不大，如果换成write就应该明显了。  
@@ -30,7 +31,7 @@ Init初始化时创建一个后台flush线程，用于写入log文件
   $ ./logtest
 
 ## Simple Performance Test
-1百万条log写入，耗时2068ms。
+1百万条log写入，耗时830ms。
 
 ## Other Ref Blog
 

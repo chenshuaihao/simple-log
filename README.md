@@ -30,7 +30,7 @@ Init初始化时创建一个后台flush线程，用于写入log文件
   $ ./logtest
 
 ## Simple Performance Test
-1百万条log写入，耗时3187ms。
+1百万条log写入，耗时2068ms。
 
 ## Other Ref Blog
 

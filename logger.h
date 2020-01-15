@@ -22,7 +22,7 @@
 #include <condition_variable>
 
 #define BUFSIZE 10*1024*1024 //10MB
-#define LOGLINESIZE 4096 //1KB
+#define LOGLINESIZE 4096 //4KB
 #define MEM_LIMIT 100*1024*1024 //100MB
 
 class Logger;

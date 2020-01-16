@@ -16,7 +16,7 @@ Init初始化时创建一个后台flush线程，用于写入log文件
 而本程序异步写入在fwrite之前还多了一次memcpy到Buffer的操作，所以更慢。  
 因此，同步写入和异步写入的fwrite之后增加flush操作刷盘，就可以实现异步更快于同步了。  
 优化性能，减少localtime()调用次数，当秒数不变时只需调用gettimeofday()更新毫秒就可以了  
-优化性能，logline去初始化，因为snprintf会覆盖logline。  
+优化性能，去除logline初始化，因为snprintf会覆盖logline，所以无需初始化。  
 
 ## Envoirment  
 * CPU: AMD Ryzen Threadripper 2990WX 32-Core Processor

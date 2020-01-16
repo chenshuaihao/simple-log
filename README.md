@@ -15,8 +15,9 @@ Init初始化时创建一个后台flush线程，用于写入log文件
 一开始时，经测试，发现同步竟然比异步写入要快！非常奇怪，经研究后发现是因为fwrite函数已经起到了缓冲作用，先是写到缓冲区，所以两者都有缓冲，性能差距不大，如果换成write就应该明显了。  
 而本程序异步写入在fwrite之前还多了一次memcpy到Buffer的操作，所以更慢。  
 因此，同步写入和异步写入的fwrite之后增加flush操作刷盘，就可以实现异步更快于同步了。  
-优化性能，减少localtime()调用次数，当秒数不变时只需调用gettimeofday()更新毫秒就可以了  
-优化性能，去除logline初始化，因为snprintf会覆盖logline，所以无需初始化。  
+优化性能，减少localtime()调用次数，当秒数不变时只需调用gettimeofday()更新毫秒就可以了，性能提高60%  
+优化性能，去除logline初始化，因为snprintf会覆盖logline，所以无需初始化，性能提高17%  
+优化性能，复用同一秒内的年月日时分秒的字符串，减少snprintf()中太多参数格式化的开销，性能提高30%  
 
 ## Envoirment  
 * CPU: AMD Ryzen Threadripper 2990WX 32-Core Processor
@@ -33,7 +34,7 @@ Init初始化时创建一个后台flush线程，用于写入log文件
   $ ./logtest
 
 ## Simple Performance Test
-1百万条log写入，耗时681ms，146w logs/second。
+1百万条log写入，耗时453ms，220w logs/second
 
 ## Other Ref Blog
 

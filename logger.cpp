@@ -123,13 +123,22 @@ void Logger::Append(int level, const char *file, int line, const char *func, con
     gettimeofday(&tv, NULL);
     static time_t lastsec = 0;
     static struct tm *ptm = nullptr;
-    //性能优化，秒数不变则不调用localtime
+    //性能优化 1.秒数不变则不调用localtime.
+    //2.并且继续复用之前的年月日时分秒的字符串，减少snprintf中太多参数格式化的开销
+    //save_ymdhms数组，保存年月日时分秒以便复用
+    char save_ymdhms[128];
     if(lastsec != tv.tv_sec) {
         ptm = localtime(&tv.tv_sec);  
         lastsec = tv.tv_sec;      
+        int k = snprintf(save_ymdhms, 128, "%04d-%02d-%02d %02d:%02d:%02d", ptm->tm_year+1900, \
+            ptm->tm_mon+1, ptm->tm_mday, ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
+        save_ymdhms[k] = '\0';
     }
-    //uint32_t n = 0;
-    uint32_t n = snprintf(logline, LOGLINESIZE, "[%s][%04d-%02d-%02d %02d:%02d:%02d.%03ld]%s:%d(%s): ", LevelString[level], ptm->tm_year+1900, \
+    uint32_t n = snprintf(logline, LOGLINESIZE, "[%s][%s.%03ld]%s:%d(%s): ", LevelString[level], \
+        save_ymdhms, tv.tv_usec/1000, file, line, func);
+
+    //slow version，多个参数需要格式化
+    //uint32_t n = snprintf(logline, LOGLINESIZE, "[%s][%04d-%02d-%02d %02d:%02d:%02d.%03ld]%s:%d(%s): ", LevelString[level], ptm->tm_year+1900, \
         ptm->tm_mon+1, ptm->tm_mday, ptm->tm_hour, ptm->tm_min, ptm->tm_sec, tv.tv_usec/1000, file, line, func);
 
 

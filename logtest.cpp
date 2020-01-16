@@ -70,7 +70,7 @@ void single_thread_test() {
 int main(int argc, char** argv)
 {
     //synctest
-    synctest();
+    //synctest();
 
     //single thread test
     single_thread_test();

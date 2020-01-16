@@ -7,8 +7,9 @@
 简易的C++异步日志，采用了日志缓冲区的方式提高效率，写入压力大时，缓冲区个数可自动扩展  
 通常情况工作时为双缓冲区  
 Init初始化时创建一个后台flush线程，用于写入log文件  
-性能测试，已进行了单线程测试，多线程尚未进行  
+性能测试，已进行了单线程测试，多线程测试  
 增加同步写入测试  
+增加多生产者线程写入测试  
 
 ## Analysis & Optimization
 * 一开始时，经测试，发现同步竟然比异步写入要快！非常奇怪，经研究后发现是因为fwrite函数已经起到了缓冲作用，先是写到缓冲区，所以两者都有缓冲，性能差距不大，如果换成write就应该明显了。  
@@ -17,6 +18,7 @@ Init初始化时创建一个后台flush线程，用于写入log文件
 * 优化性能，减少localtime()调用次数，当秒数不变时只需调用gettimeofday()更新毫秒就可以了，性能提高60%  
 * 优化性能，去除logline初始化，因为snprintf会覆盖logline，所以无需初始化，性能提高17%  
 * 优化性能，复用同一秒内的年月日时分秒的字符串，减少snprintf()中太多参数格式化的开销，性能提高30%  
+* 多线程测试时，性能下降，猜测是加锁的原因，待优化  
 
 ## Envoirment  
 * CPU: AMD Ryzen Threadripper 2990WX 32-Core Processor
@@ -33,7 +35,8 @@ Init初始化时创建一个后台flush线程，用于写入log文件
   $ ./logtest
 
 ## Simple Performance Test
-1百万条log写入，耗时453ms，220w logs/second
+单线程：1百万条log写入，耗时453ms，220w logs/second
+多线程：4线程各1百万条log写入，耗时4031ms, 99w logs/second
 
 ## Other Ref Blog
 

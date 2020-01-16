@@ -22,9 +22,9 @@
 #include <mutex>
 #include <condition_variable>
 
-#define BUFSIZE 10*1024*1024 //10MB
+#define BUFSIZE 16*1024*1024 //16MB
 #define LOGLINESIZE 4096 //4KB
-#define MEM_LIMIT 100*1024*1024 //100MB
+#define MEM_LIMIT 512*1024*1024 //512MB
 
 class Logger;
 

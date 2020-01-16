@@ -56,8 +56,8 @@ void synctest() {
 }
 
 //单线程异步写入测试
-void single_thread_test() {
-    LOG_INIT(".", LoggerLevel::INFO);
+void single_thread_test() {    
+    printf("single_thread_test...\n");
     uint64_t start_ts = get_current_millis();
     for (int i = 0;i < 1000000; ++i)
     {
@@ -67,12 +67,40 @@ void single_thread_test() {
     printf("1 million times logtest, time use %lums, %ldw logs/second\n", end_ts - start_ts, 100*1000/(end_ts - start_ts));
 }
 
+void func() {
+    for (int i = 0;i < 1000000; ++i)
+    {
+        LOG(LoggerLevel::ERROR, "log test %d\n", i);
+    }    
+}
+
+static int threadnum = 4;
+void multi_thread_test() {
+    printf("multi_thread_test, threadnum: %d ...\n", threadnum);
+    uint64_t start_ts = get_current_millis();
+    std::thread threads[threadnum];
+    for(int i = 0; i < threadnum; ++i) {
+        threads[i] = std::thread(&func);
+    }
+    for(int i = 0; i < threadnum; ++i) {
+        threads[i].join();
+    }
+    uint64_t end_ts = get_current_millis();
+    printf("%d million times logtest, time use %lums, %ldw logs/second\n", threadnum, end_ts - start_ts, threadnum*100*1000/(end_ts - start_ts));
+
+}
+
 int main(int argc, char** argv)
 {
     //synctest
     synctest();
 
+    //my test
+    LOG_INIT(".", LoggerLevel::INFO);
     //single thread test
     single_thread_test();
+
+    //multi thread test
+    multi_thread_test();
 
 }

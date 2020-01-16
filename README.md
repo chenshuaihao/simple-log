@@ -35,7 +35,7 @@ Init初始化时创建一个后台flush线程，用于写入log文件
   $ ./logtest
 
 ## Simple Performance Test
-单线程：1百万条log写入，耗时453ms，220w logs/second
+单线程：1百万条log写入，耗时453ms，220w logs/second  
 多线程：4线程各1百万条log写入，耗时4031ms, 99w logs/second
 
 ## Other Ref Blog

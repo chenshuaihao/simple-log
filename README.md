@@ -1,5 +1,5 @@
 # simple-log
-简易C++异步日志系统
+简易C++异步日志(学习用)
 
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://opensource.org/licenses/MIT)
 

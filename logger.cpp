@@ -78,9 +78,15 @@ Logger::~Logger()
     if(fp != nullptr) {
         fclose(fp);
     }
-    for(uint32_t i = 0; i < freebufqueue.size(); ++i) {
+    //std::cout << freebufqueue.size() << std::endl;
+    while(!freebufqueue.empty()) {
         LogBuffer* p = freebufqueue.front();
         freebufqueue.pop();
+        delete p;
+    }
+    while(!flushbufqueue.empty()) {
+        LogBuffer* p = flushbufqueue.front();
+        flushbufqueue.pop();
         delete p;
     }
     //if(currentlogbuffer && currentlogbuffer->GetState() == LogBuffer::BufState::FREE) {

@@ -93,7 +93,7 @@ void multi_thread_test() {
 int main(int argc, char** argv)
 {
     //synctest
-    synctest();
+    //synctest();
 
     //my test
     LOG_INIT(".", LoggerLevel::INFO);

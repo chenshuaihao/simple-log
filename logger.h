@@ -110,6 +110,8 @@ private:
     std::thread flushthread;
     //flushthread state
     bool start;
+    //save_ymdhms数组，保存年月日时分秒以便复用
+    char save_ymdhms[64];
 
 public:
     Logger(/* args */);

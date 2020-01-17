@@ -18,11 +18,13 @@
 
 #include <iostream>
 #include <queue>
+#include <map>
+#include <unordered_map>
 #include <thread>
 #include <mutex>
 #include <condition_variable>
 
-#define BUFSIZE 16*1024*1024 //16MB
+#define BUFSIZE 8*1024*1024 //16MB
 #define LOGLINESIZE 4096 //4KB
 #define MEM_LIMIT 512*1024*1024 //512MB
 
@@ -91,7 +93,8 @@ private:
     //打开的日志文件指针
     FILE *fp;
     //当前使用的缓冲区
-    LogBuffer *currentlogbuffer;
+    //LogBuffer *currentlogbuffer;
+    std::unordered_map<std::thread::id, LogBuffer *> threadbufmap;
     //mutex
     std::mutex mtx;
     //缓冲区总数

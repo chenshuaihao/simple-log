@@ -67,14 +67,15 @@ void single_thread_test() {
     printf("1 million times logtest, time use %lums, %ldw logs/second\n", end_ts - start_ts, 100*1000/(end_ts - start_ts));
 }
 
+static int threadnum = 4;
+static int logs = 100 * 10000;
 void func() {
-    for (int i = 0;i < 1000000; ++i)
+    for (int i = 0;i < logs; ++i)
     {
         LOG(LoggerLevel::ERROR, "log test %d\n", i);
     }    
 }
 
-static int threadnum = 4;
 void multi_thread_test() {
     printf("multi_thread_test, threadnum: %d ...\n", threadnum);
     uint64_t start_ts = get_current_millis();

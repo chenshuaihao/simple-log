@@ -18,7 +18,8 @@ Init初始化时创建一个后台flush线程，用于写入log文件
 * 优化性能，减少localtime()调用次数，当秒数不变时只需调用gettimeofday()更新毫秒就可以了，性能提高60%  
 * 优化性能，去除logline初始化，因为snprintf会覆盖logline，所以无需初始化，性能提高17%  
 * 优化性能，复用同一秒内的年月日时分秒的字符串，减少snprintf()中太多参数格式化的开销，性能提高30%  
-* 多线程测试时，性能下降，猜测是加锁的原因，待优化，争取比单线程快  
+* 多线程测试时，性能下降，猜测是加锁的原因，待优化  
+* 优化多线程性能，每个线程独立拥有写入缓冲区，减少锁开销（只有map索引和queue时有锁），性能提高150%  
 
 ## Envoirment  
 * CPU: AMD Ryzen Threadripper 2990WX 32-Core Processor
@@ -36,7 +37,7 @@ Init初始化时创建一个后台flush线程，用于写入log文件
 
 ## Simple Performance Test
 单线程：1百万条log写入，耗时453ms，220w logs/second  
-多线程：4线程各1百万条log写入，耗时4031ms, 99w logs/second
+多线程：4线程各1百万条log写入，耗时1597ms, 250w logs/second
 
 ## Other Ref Blog
 

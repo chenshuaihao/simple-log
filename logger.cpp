@@ -50,7 +50,7 @@ void LogBuffer::FlushToFile(FILE *fp) {
 Logger::Logger(/* args */) :
     level(LoggerLevel::INFO),
     fp(nullptr),
-    currentlogbuffer(nullptr),
+    //currentlogbuffer(nullptr),
     buftotalnum(0),
     start(false)
 {
@@ -62,11 +62,14 @@ Logger::~Logger()
     //最后的日志缓冲区push入队列
     {
         std::lock_guard<std::mutex> lock(mtx);
-        currentlogbuffer->SetState(LogBuffer::BufState::FLUSH);
-        {
-            std::lock_guard<std::mutex> lock2(flushmtx);
-            flushbufqueue.push(currentlogbuffer);                
-        }        
+        std::unordered_map<std::thread::id, LogBuffer *>::iterator iter;
+        for(iter = threadbufmap.begin(); iter != threadbufmap.end(); ++iter) {            
+            iter->second->SetState(LogBuffer::BufState::FLUSH);
+            {
+                std::lock_guard<std::mutex> lock2(flushmtx);
+                flushbufqueue.push(iter->second);                
+            }             
+        }       
     }
     flushcond.notify_one();
     //shutdown flush thread
@@ -89,16 +92,12 @@ Logger::~Logger()
         flushbufqueue.pop();
         delete p;
     }
-    //if(currentlogbuffer && currentlogbuffer->GetState() == LogBuffer::BufState::FREE) {
-    //    delete currentlogbuffer;
-    //}
 }
 
 void Logger::Init(const char* logdir, LoggerLevel lev) {
     //alloc logbuf
-    //logbuffer = new char[bufsize];
-    currentlogbuffer = new LogBuffer(BUFSIZE);
-    buftotalnum++;
+    //currentlogbuffer = new LogBuffer(BUFSIZE);
+    //buftotalnum++;
 
     //get time
     time_t t = time(nullptr);
@@ -137,7 +136,7 @@ void Logger::Append(int level, const char *file, int line, const char *func, con
             ptm->tm_mon+1, ptm->tm_mday, ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
         save_ymdhms[k] = '\0';
     }
-    uint32_t n = snprintf(logline, LOGLINESIZE, "[%s][%s.%03ld]%s:%d(%s): ", LevelString[level], \
+    uint32_t n = snprintf(logline, LOGLINESIZE, "[%s][%s.%03ld][%s:%d %s][] ", LevelString[level], \
         save_ymdhms, tv.tv_usec/1000, file, line, func);
 
     //slow version，多个参数需要格式化
@@ -152,7 +151,24 @@ void Logger::Append(int level, const char *file, int line, const char *func, con
 
     //append to buf
     int len = n + m;
-    std::lock_guard<std::mutex> lock(mtx);
+    LogBuffer *currentlogbuffer = nullptr;
+    //std::thread::id tid = std::this_thread::get_id();
+    //_Thrd_t t = *(_Thrd_t*)(char*)&tid ;
+    //unsiged int nId = t._Id
+    std::thread::id tid = std::this_thread::get_id();
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        std::unordered_map<std::thread::id, LogBuffer *>::const_iterator iter = threadbufmap.find(tid);
+        if(iter == threadbufmap.end()) {
+            threadbufmap[tid] = currentlogbuffer = new LogBuffer(BUFSIZE);
+            buftotalnum++;
+            std::cout << "------create new LogBuffer:" << buftotalnum << std::endl;
+        }
+        else {
+            currentlogbuffer = iter->second;
+        }     
+    }
+
     //空间足够
     if(currentlogbuffer->GetAvailLen() >= len && currentlogbuffer->GetState() == LogBuffer::BufState::FREE) {
         currentlogbuffer->append(logline, len);
@@ -188,15 +204,24 @@ void Logger::Append(int level, const char *file, int line, const char *func, con
                     return;
                 }            
             }
-            //if(currentlogbuffer)
-                currentlogbuffer->append(logline, len);             
+            currentlogbuffer->append(logline, len);             
+            {
+                //update
+                std::lock_guard<std::mutex> lock2(mtx);
+                threadbufmap[tid] = currentlogbuffer;                
+            }
         }
         else {
             //curbuf在flushbufqueue中，写入文件，更新
             std::lock_guard<std::mutex> lock(freemtx);
             if(!freebufqueue.empty()) {            
                 currentlogbuffer = freebufqueue.front();    
-                freebufqueue.pop();              
+                freebufqueue.pop();    
+                {
+                    //update
+                    std::lock_guard<std::mutex> lock2(mtx);
+                    threadbufmap[tid] = currentlogbuffer;                
+                }          
             }
         }
     }
@@ -214,7 +239,7 @@ void Logger::Flush() {
             }     
             //日志关闭，队列为空
             if(flushbufqueue.empty() && start == false)
-                return ;
+                return ;//std::cout << flushbufqueue.size() ;//<< std::endl;
             p = flushbufqueue.front();
             flushbufqueue.pop();       
         }

@@ -94,7 +94,8 @@ private:
     FILE *fp;
     //当前使用的缓冲区
     //LogBuffer *currentlogbuffer;
-    std::unordered_map<std::thread::id, LogBuffer *> threadbufmap;
+    //std::unordered_map<std::thread::id, LogBuffer *> threadbufmap;
+    std::map<std::thread::id, LogBuffer *> threadbufmap;
     //mutex
     std::mutex mtx;
     //缓冲区总数
@@ -115,6 +116,8 @@ private:
     bool start;
     //save_ymdhms数组，保存年月日时分秒以便复用
     char save_ymdhms[64];
+    //tid hash
+    //std::hash<std::thread::id> tid_hash;
 
 public:
     Logger(/* args */);

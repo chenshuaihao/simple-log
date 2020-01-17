@@ -9,8 +9,6 @@
 
 #include "logger.h"
 
-#include <thread>
-
 const char * LevelString[5] = {"DEBUG", "INFO", "WARNING", "ERROR", "FATAL"};
 //LogBuffer
 
@@ -62,7 +60,8 @@ Logger::~Logger()
     //最后的日志缓冲区push入队列
     {
         std::lock_guard<std::mutex> lock(mtx);
-        std::unordered_map<std::thread::id, LogBuffer *>::iterator iter;
+        //std::unordered_map<std::thread::id, LogBuffer *>::iterator iter;
+        std::map<std::thread::id, LogBuffer *>::iterator iter;
         for(iter = threadbufmap.begin(); iter != threadbufmap.end(); ++iter) {            
             iter->second->SetState(LogBuffer::BufState::FLUSH);
             {
@@ -132,11 +131,16 @@ void Logger::Append(int level, const char *file, int line, const char *func, con
     if(lastsec != tv.tv_sec) {
         struct tm *ptm = localtime(&tv.tv_sec);  
         lastsec = tv.tv_sec;      
-        int k = snprintf(save_ymdhms, 128, "%04d-%02d-%02d %02d:%02d:%02d", ptm->tm_year+1900, \
+        int k = snprintf(save_ymdhms, 64, "%04d-%02d-%02d %02d:%02d:%02d", ptm->tm_year+1900, \
             ptm->tm_mon+1, ptm->tm_mday, ptm->tm_hour, ptm->tm_min, ptm->tm_sec);
         save_ymdhms[k] = '\0';
     }
-    uint32_t n = snprintf(logline, LOGLINESIZE, "[%s][%s.%03ld][%s:%d %s][] ", LevelString[level], \
+
+    std::thread::id tid = std::this_thread::get_id();
+
+    uint32_t n = snprintf(logline, LOGLINESIZE, "[%s][%s.%03ld][%s:%d %s][pid:%u] ", LevelString[level], \
+        save_ymdhms, tv.tv_usec/1000, file, line, func, std::hash<std::thread::id>()(tid));
+    //uint32_t n = snprintf(logline, LOGLINESIZE, "[%s][%s.%03ld][%s:%d %s][] ", LevelString[level], \
         save_ymdhms, tv.tv_usec/1000, file, line, func);
 
     //slow version，多个参数需要格式化
@@ -151,21 +155,19 @@ void Logger::Append(int level, const char *file, int line, const char *func, con
 
     //append to buf
     int len = n + m;
-    LogBuffer *currentlogbuffer = nullptr;
-    //std::thread::id tid = std::this_thread::get_id();
-    //_Thrd_t t = *(_Thrd_t*)(char*)&tid ;
-    //unsiged int nId = t._Id
-    std::thread::id tid = std::this_thread::get_id();
+    LogBuffer *currentlogbuffer = nullptr;    
+    //std::unordered_map<std::thread::id, LogBuffer *>::iterator iter;
+    std::map<std::thread::id, LogBuffer *>::iterator iter;
     {
         std::lock_guard<std::mutex> lock(mtx);
-        std::unordered_map<std::thread::id, LogBuffer *>::const_iterator iter = threadbufmap.find(tid);
-        if(iter == threadbufmap.end()) {
+        iter = threadbufmap.find(tid);
+        if(iter != threadbufmap.end()) {
+            currentlogbuffer = iter->second;
+        }
+        else {
             threadbufmap[tid] = currentlogbuffer = new LogBuffer(BUFSIZE);
             buftotalnum++;
             std::cout << "------create new LogBuffer:" << buftotalnum << std::endl;
-        }
-        else {
-            currentlogbuffer = iter->second;
         }     
     }
 
@@ -208,7 +210,7 @@ void Logger::Append(int level, const char *file, int line, const char *func, con
             {
                 //update
                 std::lock_guard<std::mutex> lock2(mtx);
-                threadbufmap[tid] = currentlogbuffer;                
+                iter->second = currentlogbuffer;                
             }
         }
         else {
@@ -220,7 +222,7 @@ void Logger::Append(int level, const char *file, int line, const char *func, con
                 {
                     //update
                     std::lock_guard<std::mutex> lock2(mtx);
-                    threadbufmap[tid] = currentlogbuffer;                
+                    iter->second = currentlogbuffer;                
                 }          
             }
         }

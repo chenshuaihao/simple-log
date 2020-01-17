@@ -159,6 +159,7 @@ void Logger::Append(int level, const char *file, int line, const char *func, con
     //std::unordered_map<std::thread::id, LogBuffer *>::iterator iter;
     std::map<std::thread::id, LogBuffer *>::iterator iter;
     {
+        //待优化，应该可以改为读写锁
         std::lock_guard<std::mutex> lock(mtx);
         iter = threadbufmap.find(tid);
         if(iter != threadbufmap.end()) {

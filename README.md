@@ -21,7 +21,8 @@ Init初始化时创建一个后台flush线程，用于写入log文件
 * 多线程测试时，性能下降，猜测是加锁的原因，待优化  
 * 优化多线程性能，每个线程独立拥有写入缓冲区，减少锁开销（只有map索引和queue时有锁），性能提高150%  
 * 对比了存储线程缓冲区的数据结构map和unordered_map，最终使用map，map效率高40%，可能是因为数据量少时map效率更好  
-
+* map的锁应该可以改为读写锁，性能应该提升会很大，之后有时间再改吧 暂时先这样吧  
+  
 ## Envoirment  
 * CPU: AMD Ryzen Threadripper 2990WX 32-Core Processor
 * MEM: 128GB ddr4
